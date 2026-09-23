@@ -168,30 +168,4 @@ router.delete('/:id', authenticateToken, (req, res) => {
   }
 });
 
-// GET /api/tags - Get all unique tags (exported for use in server.js)
-function getTags(req, res) {
-  const db = getDb();
-
-  try {
-    const articles = db.prepare('SELECT tags FROM articles WHERE tags IS NOT NULL AND tags != ""').all();
-    const tagSet = new Set();
-
-    articles.forEach(article => {
-      if (article.tags) {
-        article.tags.split(',').forEach(tag => {
-          const trimmed = tag.trim();
-          if (trimmed) tagSet.add(trimmed);
-        });
-      }
-    });
-
-    const tags = Array.from(tagSet).sort();
-    res.json({ tags });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch tags' });
-  }
-}
-
 module.exports = router;
-module.exports.getTags = getTags;

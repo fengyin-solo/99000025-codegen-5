@@ -14,7 +14,13 @@
               </span>
             </div>
             <div class="article-tags">
-              <el-tag v-for="tag in article.tags" :key="tag" size="small">
+              <el-tag
+                v-for="tag in article.tags"
+                :key="tag"
+                size="small"
+                class="article-tag"
+                @click="filterByTag(tag)"
+              >
                 {{ tag }}
               </el-tag>
             </div>
@@ -78,7 +84,17 @@ async function fetchArticle() {
 }
 
 function goBack() {
-  router.push('/')
+  // Restore the exact list result (tag/search/page) the user came from
+  const redirect = route.query.redirect
+  if (typeof redirect === 'string' && redirect.startsWith('/')) {
+    router.push(redirect)
+  } else {
+    router.push('/')
+  }
+}
+
+function filterByTag(tag) {
+  router.push({ path: '/', query: { tag } })
 }
 
 function formatDate(dateStr) {
@@ -123,6 +139,10 @@ function formatDate(dateStr) {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.article-tag {
+  cursor: pointer;
 }
 
 .article-content {

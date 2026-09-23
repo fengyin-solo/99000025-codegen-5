@@ -1,5 +1,5 @@
 <template>
-  <el-menu mode="horizontal" :ellipsis="false" class="navbar">
+  <el-menu mode="horizontal" :ellipsis="false" class="navbar" :default-active="activeMenu">
     <el-menu-item index="home" @click="goHome">
       <span class="logo">Blog Platform</span>
     </el-menu-item>
@@ -23,6 +23,9 @@
     <el-menu-item index="articles" @click="goHome">
       文章
     </el-menu-item>
+    <el-menu-item index="tags" @click="goTags">
+      标签
+    </el-menu-item>
     <template v-if="authStore.isLoggedIn">
       <el-menu-item index="dashboard" @click="goDashboard">
         管理面板
@@ -40,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
@@ -52,8 +55,25 @@ const authStore = useAuthStore()
 
 const searchQuery = ref(route.query.search || '')
 
+const activeMenu = computed(() => {
+  if (route.path === '/tags') return 'tags'
+  if (route.path === '/login') return 'login'
+  if (route.path.startsWith('/admin')) return 'dashboard'
+  if (route.path === '/' || route.path.startsWith('/article')) return 'articles'
+  return ''
+})
+
+// Keep the search box in sync when navigating back to a filtered list
+watch(() => route.query.search, (value) => {
+  searchQuery.value = value || ''
+})
+
 function goHome() {
   router.push('/')
+}
+
+function goTags() {
+  router.push('/tags')
 }
 
 function goLogin() {
@@ -79,7 +99,9 @@ function handleSearch() {
 
 function handleClear() {
   if (route.path === '/' && route.query.search) {
-    router.push({ path: '/', query: {} })
+    const query = {}
+    if (route.query.tag) query.tag = route.query.tag
+    router.push({ path: '/', query })
   }
 }
 </script>

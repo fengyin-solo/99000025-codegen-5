@@ -50,9 +50,11 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import api from '../../api'
+import { useTagStore } from '../../stores/tags'
 import Pagination from '../../components/Pagination.vue'
 
 const router = useRouter()
+const tagStore = useTagStore()
 
 const articles = ref([])
 const loading = ref(false)
@@ -111,6 +113,8 @@ async function deleteArticle(article) {
     
     await api.delete(`/articles/${article.id}`)
     ElMessage.success('文章已删除')
+    // Tag counts may have changed after deletion
+    tagStore.invalidate()
     fetchArticles()
   } catch (error) {
     if (error !== 'cancel') {

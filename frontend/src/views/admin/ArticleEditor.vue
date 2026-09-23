@@ -63,9 +63,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { marked } from 'marked'
 import api from '../../api'
+import { useTagStore } from '../../stores/tags'
 
 const route = useRoute()
 const router = useRouter()
+const tagStore = useTagStore()
 
 const formRef = ref(null)
 const loading = ref(false)
@@ -153,7 +155,9 @@ async function handleSave() {
         await api.post('/articles', articleData)
         ElMessage.success('文章已创建')
       }
-      
+
+      // Tag counts may have changed; refresh on next list/overview visit
+      tagStore.invalidate()
       router.push('/admin/articles')
     } catch (error) {
       console.error('Failed to save article:', error)

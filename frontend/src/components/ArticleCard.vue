@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const props = defineProps({
   article: {
@@ -36,9 +36,14 @@ const props = defineProps({
 
 const emit = defineEmits(['tag-click'])
 const router = useRouter()
+const route = useRoute()
 
 function goToArticle() {
-  router.push(`/article/${props.article.id}`)
+  // Preserve the current list result (tag/search/page) so the back button restores it
+  router.push({
+    path: `/article/${props.article.id}`,
+    query: { redirect: route.fullPath }
+  })
 }
 
 function filterByTag(tag) {
