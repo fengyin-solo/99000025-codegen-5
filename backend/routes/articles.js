@@ -169,23 +169,54 @@ router.delete('/:id', authenticateToken, (req, res) => {
 });
 
 // GET /api/tags - Get all unique tags (exported for use in server.js)
+// Optional ?detail=1 also returns per-tag article counts and the most recent
+// article update for each tag (used by the tag overview/navigation).
 function getTags(req, res) {
   const db = getDb();
+  const wantDetail = req.query.detail === '1' || req.query.detail === 'true';
 
   try {
-    const articles = db.prepare('SELECT tags FROM articles WHERE tags IS NOT NULL AND tags != ""').all();
-    const tagSet = new Set();
+    const rows = db
+      .prepare("SELECT tags, updated_at FROM articles WHERE tags IS NOT NULL AND tags != ''")
+      .all();
 
-    articles.forEach(article => {
-      if (article.tags) {
-        article.tags.split(',').forEach(tag => {
-          const trimmed = tag.trim();
-          if (trimmed) tagSet.add(trimmed);
-        });
-      }
+    const tagMap = new Map();
+
+    rows.forEach(row => {
+      if (!row.tags) return;
+      row.tags.split(',').forEach(rawTag => {
+        const name = rawTag.trim();
+        if (!name) return;
+
+        let entry = tagMap.get(name);
+        if (!entry) {
+          entry = { name, count: 0, lastUsedAt: null };
+          tagMap.set(name, entry);
+        }
+        entry.count += 1;
+
+        const updatedAt = row.updated_at ? new Date(row.updated_at).getTime() : NaN;
+        if (!Number.isNaN(updatedAt)) {
+          if (entry.lastUsedAt === null || updatedAt > entry.lastUsedAt.getTime()) {
+            entry.lastUsedAt = new Date(updatedAt);
+          }
+        }
+      });
     });
 
-    const tags = Array.from(tagSet).sort();
+    const tagStats = Array.from(tagMap.values())
+      .map(entry => ({
+        name: entry.name,
+        count: entry.count,
+        lastUsedAt: entry.lastUsedAt ? entry.lastUsedAt.toISOString() : null
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+
+    const tags = tagStats.map(entry => entry.name);
+
+    if (wantDetail) {
+      return res.json({ tags, tagStats });
+    }
     res.json({ tags });
   } catch (err) {
     console.error(err);

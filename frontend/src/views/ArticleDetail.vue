@@ -14,7 +14,13 @@
               </span>
             </div>
             <div class="article-tags">
-              <el-tag v-for="tag in article.tags" :key="tag" size="small">
+              <el-tag
+                v-for="tag in article.tags"
+                :key="tag"
+                size="small"
+                class="article-tag"
+                @click="filterByTag(tag)"
+              >
                 {{ tag }}
               </el-tag>
             </div>
@@ -78,7 +84,16 @@ async function fetchArticle() {
 }
 
 function goBack() {
-  router.push('/')
+  // Go back to the (cached, filtered) list the user came from.
+  if (window.history.state && window.history.state.back) {
+    router.back()
+  } else {
+    router.push('/')
+  }
+}
+
+function filterByTag(tag) {
+  router.push({ path: '/', query: { tag } })
 }
 
 function formatDate(dateStr) {
@@ -123,6 +138,10 @@ function formatDate(dateStr) {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.article-tag {
+  cursor: pointer;
 }
 
 .article-content {

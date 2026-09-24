@@ -1,5 +1,5 @@
 <template>
-  <el-menu mode="horizontal" :ellipsis="false" class="navbar">
+  <el-menu mode="horizontal" :ellipsis="false" class="navbar" :default-active="activeMenu">
     <el-menu-item index="home" @click="goHome">
       <span class="logo">Blog Platform</span>
     </el-menu-item>
@@ -23,6 +23,9 @@
     <el-menu-item index="articles" @click="goHome">
       文章
     </el-menu-item>
+    <el-menu-item index="tags" @click="goTags">
+      标签
+    </el-menu-item>
     <template v-if="authStore.isLoggedIn">
       <el-menu-item index="dashboard" @click="goDashboard">
         管理面板
@@ -40,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
@@ -52,8 +55,19 @@ const authStore = useAuthStore()
 
 const searchQuery = ref(route.query.search || '')
 
+const activeMenu = computed(() => {
+  if (route.path === '/tags') return 'tags'
+  if (route.path === '/') return 'articles'
+  return ''
+})
+
 function goHome() {
   router.push('/')
+}
+
+function goTags() {
+  const query = route.query.tag ? { tag: route.query.tag } : {}
+  router.push({ path: '/tags', query })
 }
 
 function goLogin() {
